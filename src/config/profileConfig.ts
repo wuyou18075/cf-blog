@@ -24,13 +24,13 @@ export const profileConfig: ProfileConfig = {
 		{
 			name: "qq",
 			icon: "fa7-brands:qq",
-			url: "https://qm.qq.com/q/ZGsFa8qX2G",
+			url: "https://wpa.qq.com/msgrd?v=3&uin=1824767122&site=qq&menu=yes",
 			showName: false,
 		},
 		{
 			name: "GitHub",
 			icon: "fa7-brands:github",
-			url: "https://github.com/CuteLeaf",
+			url: "https://github.com/wuyou18075/cf-blog",
 			showName: false,
 		},
 		{

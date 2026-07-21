@@ -90,7 +90,7 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		children: [
 			{
 				name: "GitHub",
-				url: "https://github.com/CuteLeaf/Firefly",
+				url: "https://github.com/wuyou18075/cf-blog",
 				external: true,
 				icon: "fa7-brands:github",
 			},
@@ -101,8 +101,8 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 				icon: "fa7-brands:gitee",
 			},
 			{
-				name: "QQ交流群",
-				url: "https://qm.qq.com/q/ZGsFa8qX2G",
+				name: "QQ",
+				url: "https://wpa.qq.com/msgrd?v=3&uin=1824767122&site=qq&menu=yes",
 				external: true,
 				icon: "fa7-brands:qq",
 			},
