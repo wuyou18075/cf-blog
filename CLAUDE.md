@@ -75,7 +75,11 @@ Icons/LQIP data are generated into `src/constants/` and committed. Regenerate wi
 
 ## Deployment
 
-- **Vercel** (default, `vercel.json`)
-- **Cloudflare Workers** (`wrangler.jsonc`, set `CF_WORKERS` env var)
+- **Cloudflare Workers** (primary CI): push to `master` → `.github/workflows/deploy.yml`
+  - Build with `CF_WORKERS=1` (enables `@astrojs/cloudflare` adapter in `astro.config.mjs`)
+  - Deploy via `cloudflare/wrangler-action` using `wrangler.jsonc` (`assets.directory: ./dist`)
+  - Required GitHub secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
+  - Local: `pnpm build:cf` / `pnpm deploy:cf` (needs wrangler login or env token)
+- **Vercel** (optional, `vercel.json`)
 - Static output to `dist/`
 

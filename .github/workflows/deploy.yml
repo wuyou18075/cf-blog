@@ -1,60 +1,66 @@
-name: Deploy to GitHub Pages
+name: Deploy to Cloudflare Workers
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   workflow_dispatch:
 
-# Pages 部署需要的权限
+# 部署所需权限（secrets 读取由 GitHub 自动处理）
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
-# 确保只有一个部署任务同时运行
+# 同一时间只跑一个部署，新 push 会取消进行中的旧部署
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: cloudflare-deploy
+  cancel-in-progress: true
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          
+          node-version: "22"
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9.14.4
           run_install: false
-          
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
-      
-      - name: Build site
+        run: pnpm install --frozen-lockfile
+
+      - name: Build site (Cloudflare Workers)
+        env:
+          # 启用 @astrojs/cloudflare adapter（见 astro.config.mjs）
+          CF_WORKERS: "1"
+          # 可选：自定义构建平台显示名
+          FIREFLY_BUILD_PLATFORM: "GitHub Actions → Cloudflare"
         run: pnpm run build
 
-      - name: Create .nojekyll file
-        run: touch dist/.nojekyll
-      
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
         with:
-          path: dist  # Astro默认构建输出目录
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # 使用项目已声明的 wrangler 版本
+          wranglerVersion: "4.107.1"
+          command: deploy

@@ -1,7 +1,9 @@
 {
+	// Worker 名称（CF 控制台 / *.workers.dev 子域名会用到；可按需改成你的项目名）
 	"name": "firefly",
 	"compatibility_date": "2025-01-01",
 	"compatibility_flags": ["nodejs_compat"],
+	// Astro 构建产物目录；CI 中先 pnpm build（CF_WORKERS=1）再 wrangler deploy
 	"assets": {
 		"directory": "./dist"
 	}

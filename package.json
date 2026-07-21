@@ -7,6 +7,8 @@
     "start": "astro dev",
     "check": "astro check",
     "build": "node scripts/generate-icons.js && npx tsx scripts/generate-lqips.ts && astro build && npx tsx scripts/subset-fonts.ts && pagefind --site dist",
+    "build:cf": "CF_WORKERS=1 pnpm run build",
+    "deploy:cf": "pnpm run build:cf && wrangler deploy",
     "preview": "astro preview",
     "astro": "astro",
     "type-check": "tsc --noEmit --isolatedDeclarations",
