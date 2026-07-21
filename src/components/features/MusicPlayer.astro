@@ -61,6 +61,16 @@ const widgetId =
             </button>
         </div>
 
+        <!-- 音源切换：在线动态歌单 / 周杰伦专辑 -->
+        <div class="music-source-wrap min-w-0 mt-0.5 mb-0.5 hidden">
+            <label class="sr-only" for={`music-source-${widgetId}`}>音源</label>
+            <select
+                id={`music-source-${widgetId}`}
+                class="music-source-select w-full max-w-full text-[11px] font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100/80 dark:bg-white/5 border border-neutral-200/70 dark:border-white/10 rounded-md px-1.5 py-0.5 outline-none focus:border-(--primary) focus:text-(--primary) cursor-pointer truncate"
+                aria-label="切换音源"
+            ></select>
+        </div>
+
         <div class="min-w-0 overflow-hidden">
             <p class="music-artist text-xs font-medium text-neutral-500 dark:text-neutral-400 truncate">
                 {i18n(I18nKey.musicNoPlaying)}
@@ -225,7 +235,9 @@ const widgetId =
         btnDrawer: widget.querySelector('.btn-drawer-toggle'),
         playlistDrawer: widget.querySelector('.playlist-drawer'),
         playlistContainer: widget.querySelector('.playlist-container'),
-        itemTemplate: document.getElementById('playlist-item-template-' + widgetId)
+        itemTemplate: document.getElementById('playlist-item-template-' + widgetId),
+        sourceWrap: widget.querySelector('.music-source-wrap'),
+        sourceSelect: widget.querySelector('.music-source-select')
     };
 
     // Verify critical elements
@@ -588,12 +600,31 @@ const widgetId =
     }
 
     // ── Full sync from manager state (for late-mount) ────────
+    function renderSourceSelect(sources, sourceId) {
+        if (!ui.sourceSelect || !ui.sourceWrap) return;
+        if (!sources || sources.length <= 1) {
+            ui.sourceWrap.classList.add('hidden');
+            return;
+        }
+        ui.sourceWrap.classList.remove('hidden');
+        ui.sourceSelect.innerHTML = '';
+        sources.forEach(function (s) {
+            var opt = document.createElement('option');
+            opt.value = s.id;
+            opt.textContent = s.name;
+            if (s.id === sourceId) opt.selected = true;
+            ui.sourceSelect.appendChild(opt);
+        });
+    }
+
     function syncAll() {
         var s = mgr.getState();
         if (!s.initialized) return;
 
         // Loading off
         setLoading(false);
+
+        renderSourceSelect(s.sources, s.sourceId);
 
         if (s.playlist.length === 0) {
             ui.title.innerText = s.error || cfg.i18n.noSongs;
@@ -638,6 +669,7 @@ const widgetId =
     on('fm:init', function (e) {
         var d = e.detail;
         setLoading(false);
+        renderSourceSelect(d.sources, d.sourceId);
         if (d.playlist.length > 0) {
             renderPlaylist(d.playlist, 0);
             updateModeUI(d.playMode);
@@ -645,6 +677,15 @@ const widgetId =
         } else {
             ui.title.innerText = cfg.i18n.noSongs;
         }
+    });
+
+    on('fm:source', function (e) {
+        var d = e.detail;
+        renderSourceSelect(d.sources, d.sourceId);
+    });
+
+    on('fm:loading', function (e) {
+        setLoading(!!(e.detail && e.detail.loading));
     });
 
     on('fm:track', function (e) {
@@ -684,6 +725,7 @@ const widgetId =
 
     on('fm:error', function (e) {
         ui.title.innerText = e.detail.message || cfg.i18n.error;
+        setLoading(false);
     });
 
     // ── Button click delegates ───────────────────────────────
@@ -692,6 +734,16 @@ const widgetId =
     ui.btnPrev.addEventListener('click', function () { mgr.playPrev(); });
     ui.btnRepeat.addEventListener('click', function () { mgr.cyclePlayMode(); });
     ui.btnMute.addEventListener('click', function () { mgr.toggleMute(); });
+
+    if (ui.sourceSelect) {
+        ui.sourceSelect.addEventListener('change', function () {
+            var id = ui.sourceSelect.value;
+            if (id && mgr.switchSource) {
+                setLoading(true);
+                mgr.switchSource(id, true);
+            }
+        });
+    }
 
     ui.volContainer.addEventListener('click', function (e) {
         var rect = ui.volContainer.getBoundingClientRect();

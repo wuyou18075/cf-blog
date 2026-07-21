@@ -1,37 +1,66 @@
 ---
 import { musicPlayerConfig } from "@/config/musicConfig";
+import type { MusicSource, MusicTrack } from "@/types/musicConfig";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 import { url } from "@/utils/url-utils";
 
 const config = musicPlayerConfig;
 
-const localPlaylist =
-	config.mode === "local" && config.local?.playlist
-		? config.local.playlist.map((song) => {
-				const isFullUrl = (path: string) => /^https?:\/\//.test(path);
-				return {
-					name: song.name,
-					artist: song.artist,
-					url: isFullUrl(song.url) ? song.url : url(song.url),
-					pic: song.cover
-						? isFullUrl(song.cover)
-							? song.cover
-							: url(song.cover)
-						: undefined,
-					lrc: song.lrc
-						? isFullUrl(song.lrc)
-							? song.lrc
-							: url(song.lrc)
-						: undefined,
-				};
-			})
-		: [];
+const isFullUrl = (path: string) => /^https?:\/\//.test(path);
+
+function mapLocalTracks(list: MusicTrack[] = []) {
+	return list.map((song) => ({
+		name: song.name,
+		artist: song.artist,
+		url: isFullUrl(song.url) ? song.url : url(song.url),
+		pic: song.cover
+			? isFullUrl(song.cover)
+				? song.cover
+				: url(song.cover)
+			: undefined,
+		lrc: song.lrc
+			? isFullUrl(song.lrc)
+				? song.lrc
+				: url(song.lrc)
+			: undefined,
+	}));
+}
+
+// 统一成 sources 列表：优先用 config.sources，否则退回 mode+meting/local
+const sources: Array<{
+	id: string;
+	name: string;
+	mode: "meting" | "local";
+	meting?: MusicSource["meting"];
+	localPlaylist: ReturnType<typeof mapLocalTracks>;
+}> =
+	config.sources && config.sources.length > 0
+		? config.sources.map((s) => ({
+				id: s.id,
+				name: s.name,
+				mode: s.mode,
+				meting: s.meting,
+				localPlaylist: mapLocalTracks(s.local?.playlist),
+			}))
+		: [
+				{
+					id: "default",
+					name: config.mode === "local" ? "本地歌单" : "在线歌单",
+					mode: config.mode === "local" ? "local" : "meting",
+					meting: config.meting,
+					localPlaylist: mapLocalTracks(config.local?.playlist),
+				},
+			];
+
+const defaultSourceId =
+	config.defaultSourceId && sources.some((s) => s.id === config.defaultSourceId)
+		? config.defaultSourceId
+		: sources[0].id;
 
 const managerConfigStr = JSON.stringify({
-	mode: config.mode,
-	meting: config.meting,
-	localPlaylist: localPlaylist,
+	sources,
+	defaultSourceId,
 	volume: config.volume ?? 0.7,
 	playMode: config.playMode ?? "list",
 	showLyrics: config.showLyrics ?? true,
@@ -102,6 +131,15 @@ const managerConfigStr = JSON.stringify({
 
     // ── State ────────────────────────────────────────────────
     var loadVersion = 0; // incremented on each loadTrack to discard stale play() results
+    var sources = Array.isArray(config.sources) ? config.sources : [];
+    var storedSourceId = null;
+    try { storedSourceId = localStorage.getItem('music-player-source-id'); } catch (e) {}
+    var initialSourceId =
+        (storedSourceId && sources.some(function (s) { return s.id === storedSourceId; }) && storedSourceId)
+        || config.defaultSourceId
+        || (sources[0] && sources[0].id)
+        || 'default';
+
     var state = {
         playlist: [],
         currentIndex: 0,
@@ -115,8 +153,18 @@ const managerConfigStr = JSON.stringify({
         currentLrcIndex: -1,
         initialized: false,
         initializing: false,
-        error: null
+        switching: false,
+        error: null,
+        sources: sources,
+        sourceId: initialSourceId
     };
+
+    function getSource(id) {
+        for (var i = 0; i < sources.length; i++) {
+            if (sources[i].id === id) return sources[i];
+        }
+        return sources[0] || null;
+    }
 
     // Map config playMode string to number
     if (config.playMode === 'random') state.playMode = 2;
@@ -129,9 +177,9 @@ const managerConfigStr = JSON.stringify({
     }
 
     // ── Meting fetch ─────────────────────────────────────────
-    async function fetchMetingData() {
-        if (!config.meting) return;
-        var m = config.meting;
+    async function fetchMetingData(meting) {
+        if (!meting) return;
+        var m = meting;
         var apis = [m.api].concat(m.fallbackApis || []);
 
         for (var i = 0; i < apis.length; i++) {
@@ -166,6 +214,81 @@ const managerConfigStr = JSON.stringify({
             }
         }
         throw new Error('All Meting APIs failed');
+    }
+
+    async function loadSource(sourceId, autoPlay) {
+        var source = getSource(sourceId);
+        if (!source) throw new Error('Music source not found');
+
+        state.sourceId = source.id;
+        state.error = null;
+        state.playlist = [];
+        state.currentIndex = 0;
+        state.lyrics = [];
+        state.currentLrcIndex = -1;
+
+        try { localStorage.setItem('music-player-source-id', source.id); } catch (e) {}
+
+        emit('fm:source', {
+            sourceId: source.id,
+            sourceName: source.name,
+            sources: sources.map(function (s) { return { id: s.id, name: s.name }; })
+        });
+
+        if (source.mode === 'meting' && source.meting) {
+            await fetchMetingData(source.meting);
+        } else {
+            state.playlist = source.localPlaylist || [];
+        }
+
+        if (state.playlist.length === 0) {
+            emit('fm:error', { message: config.i18n.noSongs });
+            emit('fm:init', {
+                playlist: [],
+                playMode: state.playMode,
+                volume: state.volume,
+                isMuted: state.isMuted,
+                sourceId: state.sourceId,
+                sources: sources.map(function (s) { return { id: s.id, name: s.name }; })
+            });
+            return;
+        }
+
+        var startIndex = 0;
+        if (state.playMode === 2) {
+            startIndex = Math.floor(Math.random() * state.playlist.length);
+        }
+
+        emit('fm:init', {
+            playlist: state.playlist,
+            playMode: state.playMode,
+            volume: state.volume,
+            isMuted: state.isMuted,
+            sourceId: state.sourceId,
+            sources: sources.map(function (s) { return { id: s.id, name: s.name }; })
+        });
+
+        loadTrack(startIndex, !!autoPlay);
+    }
+
+    async function switchSource(sourceId, autoPlay) {
+        if (!sourceId || sourceId === state.sourceId) return;
+        if (state.switching) return;
+        state.switching = true;
+        emit('fm:loading', { loading: true });
+        try {
+            audio.pause();
+            state.isPlaying = false;
+            emit('fm:play-state', { isPlaying: false });
+            await loadSource(sourceId, autoPlay !== false);
+        } catch (e) {
+            console.error('switchSource error:', e);
+            state.error = config.i18n.error;
+            emit('fm:error', { message: state.error });
+        } finally {
+            state.switching = false;
+            emit('fm:loading', { loading: false });
+        }
     }
 
     // ── Lyrics ───────────────────────────────────────────────
@@ -353,43 +476,12 @@ const managerConfigStr = JSON.stringify({
     async function init() {
         if (state.initialized || state.initializing) return;
         state.initializing = true;
+        emit('fm:loading', { loading: true });
 
         try {
-            if (config.mode === 'meting' && config.meting) {
-                await fetchMetingData();
-            } else if (config.mode === 'local') {
-                state.playlist = config.localPlaylist || [];
-            }
-
-            if (state.playlist.length > 0) {
-                // Apply volume
-                audio.volume = state.volume;
-
-                var startIndex = 0;
-                if (state.playMode === 2) {
-                    startIndex = Math.floor(Math.random() * state.playlist.length);
-                }
-
-                state.initialized = true;
-
-                emit('fm:init', {
-                    playlist: state.playlist,
-                    playMode: state.playMode,
-                    volume: state.volume,
-                    isMuted: state.isMuted
-                });
-
-                loadTrack(startIndex, false);
-            } else {
-                state.initialized = true;
-                emit('fm:init', {
-                    playlist: [],
-                    playMode: state.playMode,
-                    volume: state.volume,
-                    isMuted: state.isMuted
-                });
-                emit('fm:error', { message: config.i18n.noSongs });
-            }
+            audio.volume = state.volume;
+            await loadSource(state.sourceId, false);
+            state.initialized = true;
         } catch (e) {
             console.error('Music Manager init error:', e);
             state.initialized = true;
@@ -397,11 +489,14 @@ const managerConfigStr = JSON.stringify({
                 playlist: [],
                 playMode: state.playMode,
                 volume: state.volume,
-                isMuted: state.isMuted
+                isMuted: state.isMuted,
+                sourceId: state.sourceId,
+                sources: sources.map(function (s) { return { id: s.id, name: s.name }; })
             });
             emit('fm:error', { message: config.i18n.error });
         } finally {
             state.initializing = false;
+            emit('fm:loading', { loading: false });
         }
     }
 
@@ -410,6 +505,7 @@ const managerConfigStr = JSON.stringify({
         init: init,
         getState: function () {
             var track = state.playlist[state.currentIndex] || null;
+            var source = getSource(state.sourceId);
             return {
                 playlist: state.playlist,
                 currentIndex: state.currentIndex,
@@ -427,6 +523,9 @@ const managerConfigStr = JSON.stringify({
                 currentLrcIndex: state.currentLrcIndex,
                 initialized: state.initialized,
                 error: state.error,
+                sourceId: state.sourceId,
+                sourceName: source ? source.name : '',
+                sources: sources.map(function (s) { return { id: s.id, name: s.name }; }),
                 config: config
             };
         },
@@ -439,7 +538,8 @@ const managerConfigStr = JSON.stringify({
         seek: seek,
         seekToTime: seekToTime,
         playTrackByIndex: playTrackByIndex,
-        loadTrack: loadTrack
+        loadTrack: loadTrack,
+        switchSource: switchSource
     };
 })();
 </script>
