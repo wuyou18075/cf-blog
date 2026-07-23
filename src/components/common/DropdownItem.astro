@@ -38,7 +38,8 @@ const isExternal =
 		href.startsWith("https://") ||
 		href.startsWith("//"));
 const resolvedRel =
-	rel ?? (isExternal || target === "_blank" ? "noopener noreferrer" : undefined);
+	rel ??
+	(isExternal || target === "_blank" ? "noopener noreferrer" : undefined);
 ---
 
 <Tag
