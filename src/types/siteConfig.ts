@@ -86,6 +86,7 @@ export type SiteConfig = {
 		gallery: boolean; // 相册页面开关
 		anime: boolean; // 追番页面开关
 		dynamic: boolean; // 动态页面开关
+		about: boolean; // 关于页面开关
 	};
 
 	// 分类导航栏开关
