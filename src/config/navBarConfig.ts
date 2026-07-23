@@ -89,12 +89,6 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		// 子菜单
 		children: [
 			{
-				name: "GitHub",
-				url: "https://github.com/wuyou18075",
-				external: true,
-				icon: "fa7-brands:github",
-			},
-			{
 				name: "CSDN",
 				url: "https://blog.csdn.net/qq_39610585?type=blog",
 				external: true,

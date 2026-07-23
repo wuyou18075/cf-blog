@@ -28,12 +28,6 @@ export const profileConfig: ProfileConfig = {
 			showName: false,
 		},
 		{
-			name: "GitHub",
-			icon: "fa7-brands:github",
-			url: "https://github.com/wuyou18075",
-			showName: false,
-		},
-		{
 			name: "CSDN",
 			icon: "simple-icons:csdn",
 			url: "https://blog.csdn.net/qq_39610585?type=blog",
