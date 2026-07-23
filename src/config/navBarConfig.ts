@@ -90,15 +90,28 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		children: [
 			{
 				name: "GitHub",
-				url: "https://github.com/wuyou18075/cf-blog",
+				url: "https://github.com/wuyou18075",
 				external: true,
 				icon: "fa7-brands:github",
 			},
+			{
+				name: "CSDN",
+				url: "https://blog.csdn.net/qq_39610585?type=blog",
+				external: true,
+				icon: "simple-icons:csdn",
+			},
+
 			{
 				name: "QQ",
 				url: "https://wpa.qq.com/msgrd?v=3&uin=1824767122&site=qq&menu=yes",
 				external: true,
 				icon: "fa7-brands:qq",
+			},
+			{
+				name: "邮箱",
+				url: "mailto:1824767122@qq.com",
+				external: true,
+				icon: "fa7-solid:envelope",
 			},
 			{
 				name: "Firefly文档",

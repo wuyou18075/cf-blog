@@ -1,29 +1,31 @@
-# 关于我 / About Me
+# 关于我
 
-你好！我是 **夏叶** ，一个在数字世界中默默无闻的一片叶子。
+你好，欢迎来到我的个人博客。
 
-## 🛠️ 关于本站
+这里主要记录 **技术折腾、自用小项目**，以及用 AI 辅助编程从想法到上线的过程。内容以实用为主，偏运维、Cloudflare、前端与自动化相关。
 
-这个网站使用 **Astro** 框架构建，采用了 [Firefly](https://github.com/CuteLeaf/Firefly) 模板，Firefly 是基于 [Fuwari](https://github.com/saicaca/fuwari) 的二次开发。
+## 在哪儿找到我
 
-**Firefly** 是一款基于 Astro 框架和 Fuwari 模板开发的清新美观且现代化个人博客主题模板，专为技术爱好者和内容创作者设计。该主题融合了现代 Web 技术栈，提供了丰富的功能模块和高度可定制的界面，让您能够轻松打造出专业且美观的个人博客网站。
+| 平台 | 链接 |
+| --- | --- |
+| **CSDN** | [blog.csdn.net/qq_39610585](https://blog.csdn.net/qq_39610585?type=blog) |
+| **GitHub** | [github.com/wuyou18075](https://github.com/wuyou18075) |
+| **本站仓库** | [cf-blog](https://github.com/wuyou18075/cf-blog) |
+| **QQ** | 1824767122 |
+| **邮箱** | [1824767122@qq.com](mailto:1824767122@qq.com) |
 
+## 近期项目
 
-**🖥️在线预览： [Firefly - Demo site](https://firefly.cuteleaf.cn/)**
+- [CF 看板（cf-tg-web）](https://github.com/wuyou18075/cf-tg-web)：多 VPS 流量集中看板 + Telegram 汇总 / 离线告警  
+- [VirtualAddress](https://github.com/wuyou18075/virtualAddress)：多国家/地区测试地址与数据生成（[在线预览](https://virtualaddress.2n.cc.cd/)）  
+- 本站：基于 Firefly / Astro 的静态博客，部署在 Cloudflare Workers  
 
-**🏠我的博客： [https://blog.cuteleaf.cn](https://blog.cuteleaf.cn/)**
+更多说明见文章：[AI 编程落地项目：CF 看板与虚拟地址生成器](/posts/ai-projects-cf-tg-web/)
 
-**📝Firefly使用文档： [https://docs-firefly.cuteleaf.cn](https://docs-firefly.cuteleaf.cn/)**
+## 关于本站
 
-**⭐Firefly开源地址：[https://github.com/CuteLeaf/Firefly](https://github.com/CuteLeaf/Firefly)** 
+- 框架：[Astro](https://astro.build/)  
+- 主题：Firefly（基于 Fuwari）  
+- 部署：GitHub Actions → Cloudflare Workers  
 
-**⭐Fuwari开源地址：[https://github.com/saicaca/fuwari](https://github.com/saicaca/fuwari)**
-
-::github{repo="CuteLeaf/Firefly"}
-
-::github{repo="saicaca/fuwari"}
-
----
-
-*感谢你的来访！希望在这里能找到对你有用的内容！*
-
+有问题或合作可以通过 QQ、邮箱（1824767122@qq.com）或 CSDN 私信联系。谢谢到访。
