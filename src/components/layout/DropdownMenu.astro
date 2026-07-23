@@ -59,6 +59,8 @@ const hasChildren = processedLink.children && processedLink.children.length > 0;
 			aria-label={processedLink.name} 
 			href={processedLink.external ? processedLink.url : url(processedLink.url)} 
 			target={processedLink.external ? "_blank" : null}
+			rel={processedLink.external ? "noopener noreferrer" : undefined}
+			data-no-swup={processedLink.external ? true : undefined}
 			class="btn-plain scale-animation rounded-lg h-10 font-bold px-4 active:scale-95"
 		>
 			<div class="flex items-center gap-1.5">

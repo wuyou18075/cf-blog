@@ -6,6 +6,7 @@
 interface Props {
 	href?: string;
 	target?: string;
+	rel?: string;
 	isActive?: boolean;
 	isLast?: boolean;
 	class?: string;
@@ -15,6 +16,7 @@ interface Props {
 const {
 	href,
 	target,
+	rel,
 	isActive = false,
 	isLast = false,
 	class: className,
@@ -29,11 +31,21 @@ const allClasses =
 	`${baseClasses} ${spacingClass} ${activeClass} ${className || ""}`.trim();
 
 const Tag = href ? "a" : "button";
+// 外链：跳过 Swup 拦截，并补安全 rel
+const isExternal =
+	typeof href === "string" &&
+	(href.startsWith("http://") ||
+		href.startsWith("https://") ||
+		href.startsWith("//"));
+const resolvedRel =
+	rel ?? (isExternal || target === "_blank" ? "noopener noreferrer" : undefined);
 ---
 
-<Tag 
+<Tag
 	href={href}
 	target={target}
+	rel={resolvedRel}
+	data-no-swup={isExternal ? true : undefined}
 	class={allClasses}
 	onclick={onclick}
 >
