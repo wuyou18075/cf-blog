@@ -10,17 +10,17 @@
 | --- | --- |
 | **CSDN** | [blog.csdn.net/qq_39610585](https://blog.csdn.net/qq_39610585?type=blog) |
 | **GitHub** | [github.com/wuyou18075](https://github.com/wuyou18075) |
-| **本站仓库** | [cf-blog](https://github.com/wuyou18075/cf-blog) |
 | **QQ** | 1824767122 |
 | **邮箱** | [1824767122@qq.com](mailto:1824767122@qq.com) |
 
 ## 近期项目
 
-- [CF 看板（cf-tg-web）](https://github.com/wuyou18075/cf-tg-web)：多 VPS 流量集中看板 + Telegram 汇总 / 离线告警  
-- [VirtualAddress](https://github.com/wuyou18075/virtualAddress)：多国家/地区测试地址与数据生成（[在线预览](https://virtualaddress.2n.cc.cd/)）  
-- 本站：基于 Firefly / Astro 的静态博客，部署在 Cloudflare Workers  
+- **VirtualAddress**：多国家/地区测试地址与数据生成（**住宅判定 + 地图校验**）  
+  - **在线体验：** [https://virtualaddress.2n.cc.cd/](https://virtualaddress.2n.cc.cd/)  
+- **CF 看板**：多 VPS 流量集中看板 + Telegram 汇总 / 离线告警（**省流设计，适合 CF 免费套餐**）  
+- **本站**：基于 Firefly / Astro 的静态博客，部署在 Cloudflare Workers  
 
-更多说明见文章：[AI 编程落地项目：CF 看板与虚拟地址生成器](/posts/ai-projects-cf-tg-web/)
+更多说明见文章：[AI 编程落地项目：虚拟地址生成器与 CF 看板](/posts/ai-projects-cf-tg-web/)
 
 ## 关于本站
 
